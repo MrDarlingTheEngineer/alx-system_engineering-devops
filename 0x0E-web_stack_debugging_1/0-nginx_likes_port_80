@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-# Debugging nginx to listen to port 80 and reloads the nginx master process
-sed -i 's/listen 8080/listen 80/g' /etc/nginx/sites-enabled/default
-sed -i 's/listen \[::\]:8080/listen \[::\]:80/g' /etc/nginx/sites-enabled/default
-pgrep nginx -o > /run/nginx.pid
-nginx -s reload
-echo '' > /run/nginx.pid
+# fix server not listening in port 80
+sudo sed -i 's/listen 8080 default_server;.*/listen 80 default_server;/' /etc/nginx/sites-enabled/default
+sudo sed -i 's/listen \[::\]:8080 default_server ipv6only=on;.*/listen \[::\]:80 default_server;/' /etc/nginx/sites-enabled/default
+sudo service nginx restart
