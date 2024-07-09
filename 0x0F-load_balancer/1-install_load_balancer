@@ -15,7 +15,7 @@ sudo apt-get -y install haproxy=2.4\*
 >>>>>>> d04f159fe5f81517d63282254e44a9a54397e1fa
 
 # the load balancer's configuration
-DOMAIN_NAME='devking.tech'
+DOMAIN_NAME='donkomi.tech'
 INIT_FILE='/etc/default/haproxy'
 CONFIG_FILE='/etc/haproxy/haproxy.cfg'
 HAPROXY_LB_CONFIG=\
