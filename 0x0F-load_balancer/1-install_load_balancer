@@ -44,8 +44,8 @@ backend servers
 =======
 	balance roundrobin
 >>>>>>> d04f159fe5f81517d63282254e44a9a54397e1fa
-	server web1 100.25.135.219 check
-	server web2 54.173.194.98 check
+	server 188797-web-01 54.87.210.123 check
+	server 188797-web-02 18.209.152.147 check
 frontend $DOMAIN_NAME
 	bind *:80
 	mode http
