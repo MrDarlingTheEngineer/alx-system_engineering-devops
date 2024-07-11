@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# Installs, configures, and starts the load balancer
+sudo apt-get update
+sudo apt-get -y install --no-install-recommends software-properties-common
+sudo add-apt-repository -y ppa:vbernat/haproxy-2.4
+sudo apt-get -y install haproxy=2.4.*
+
+DOMAIN_NAME='donkomi.tech'
+INIT_FILE='/etc/default/haproxy'
+CONFIG_FILE='/etc/haproxy/haproxy.cfg'
+
+HAPROXY_LB_CONFIG="
+global
+    maxconn 50000
+    log /dev/log local0
+    user haproxy
+    group haproxy
+    stats socket /run/haproxy/admin.sock user haproxy group haproxy mode 600 level admin
+
+defaults
+    timeout connect 10s
+    timeout client 30s
+    timeout server 30s
+    log global
+    mode http
+    option httplog
+    maxconn 3000
+
+backend servers
+    balance roundrobin
+    server 188797-web-01 54.87.210.123:80 check
+    server 188797-web-02 18.209.152.147:80 check
+
+frontend $DOMAIN_NAME
+    bind *:80
+    mode http
+    default_backend servers
+"
+
+sudo echo "$HAPROXY_LB_CONFIG" | sudo tee "$CONFIG_FILE"
+
+if [ "$(pgrep -c haproxy)" -le 0 ]; then
+    sudo service haproxy start
+else
+    sudo service haproxy restart
+fi
+
