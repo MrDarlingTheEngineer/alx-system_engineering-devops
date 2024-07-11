@@ -1,62 +1,76 @@
-#!/usr/bin/env bash
-# Installs, configures, and starts the load balancer
-<<<<<<< HEAD
-# shellcheck disable=SC2024
-sudo apt-get update
-sudo apt-get -y install --no-install-recommends software-properties-common
-sudo add-apt-repository -y ppa:vbernat/haproxy-2.4
-sudo apt-get -y install haproxy=2.4.\*
-=======
+#!/bin/bash
 
-sudo apt-get update
-sudo apt-get -y install --no-install-recommends software-properties-common
-sudo add-apt-repository -y ppa:vbernat/haproxy-2.4
-sudo apt-get -y install haproxy=2.4\*
->>>>>>> d04f159fe5f81517d63282254e44a9a54397e1fa
+# Variables
+STUDENT_ID="your_student_id"  # Replace with your actual student ID
+WEB01="${188797}-web-01"
+WEB02="${188797}-web-02"
 
-# the load balancer's configuration
-DOMAIN_NAME='donkomi.tech'
-INIT_FILE='/etc/default/haproxy'
-CONFIG_FILE='/etc/haproxy/haproxy.cfg'
-HAPROXY_LB_CONFIG=\
-"
-#--$DOMAIN_NAME-params-begin--
+# Update and install HAProxy
+sudo apt-get update
+sudo apt-get install -y haproxy
+
+# Configure HAProxy
+sudo bash -c "cat > /etc/haproxy/haproxy.cfg <<EOF
 global
-	maxconn 50000
-	log /dev/log local0
-	user haproxy
-	group haproxy
-	stats socket /run/haproxy/admin.sock user haproxy group haproxy mode 600 level admin
-	nbthread 4
-	cpu-map auto:1/1-4 0-3
+    log /dev/log    local0
+    log /dev/log    local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+
+    # Default SSL material locations
+    ca-base /etc/ssl/certs
+    crt-base /etc/ssl/private
+
+    # See: https://ssl-config.mozilla.org/ for the latest recommended ciphers.
+    ssl-default-bind-ciphers PROFILE=SYSTEM
+    ssl-default-bind-options no-sslv3
 
 defaults
-	timeout connect 10s
-	timeout client 30s
-	timeout server 30s
-	log global
-	mode http
-	option httplog
-	maxconn 3000
-backend servers
-<<<<<<< HEAD
-	balancde roundrobin
-=======
-	balance roundrobin
->>>>>>> d04f159fe5f81517d63282254e44a9a54397e1fa
-	server 188797-web-01 54.87.210.123 check
-	server 188797-web-02 18.209.152.147 check
-frontend $DOMAIN_NAME
-	bind *:80
-	mode http
-	default_backend servers
-#--$DOMAIN_NAME-params-end--
-"
-sudo echo "$HAPROXY_LB_CONFIG" | sudo tee "$CONFIG_FILE"
+    log     global
+    mode    http
+    option  httplog
+    option  dontlognull
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+    errorfile 400 /etc/haproxy/errors/400.http
+    errorfile 403 /etc/haproxy/errors/403.http
+    errorfile 408 /etc/haproxy/errors/408.http
+    errorfile 500 /etc/haproxy/errors/500.http
+    errorfile 502 /etc/haproxy/errors/502.http
+    errorfile 503 /etc/haproxy/errors/503.http
+    errorfile 504 /etc/haproxy/errors/504.http
 
-if [ "$(pgrep -c haproxy)" -le 0 ]; then
-	sudo service haproxy start
-else
-	sudo service haproxy restart
-fi
-	
+frontend http_front
+    bind *:80
+    default_backend http_back
+
+backend http_back
+    balance roundrobin
+    server ${WEB01} ${WEB01}:80 check
+    server ${WEB02} ${WEB02}:80 check
+
+listen stats
+    bind *:8080
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+    stats auth admin:admin
+EOF"
+
+# Enable and start HAProxy service
+sudo systemctl enable haproxy
+sudo systemctl start haproxy
+
+# Ensure hostnames are correctly configured
+echo "127.0.0.1   localhost" | sudo tee /etc/hosts
+echo "127.0.1.1   ${WEB01}" | sudo tee -a /etc/hosts
+echo "127.0.1.2   ${WEB02}" | sudo tee -a /etc/hosts
+
+# Print success message
+echo "HAProxy has been configured and started successfully."
+
