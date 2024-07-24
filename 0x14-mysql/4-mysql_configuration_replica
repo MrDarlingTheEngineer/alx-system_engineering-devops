@@ -1,0 +1,21 @@
+[mysqld]
+server-id = 2
+log_bin = mysql-bin
+binlog_format = ROW
+read_only = 1
+relay_log = mysql-relay-bin
+replicate_do_db = tyrell_corp
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid
+
+
+CHANGE MASTER TO
+  MASTER_HOST='188797-web-01',
+  MASTER_USER='replica_user',
+  MASTER_PASSWORD='replica_password',
+  MASTER_LOG_FILE='mysql-bin.000215',
+  MASTER_LOG_POS=154;
+
+START SLAVE;
