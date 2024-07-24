@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Create replica_user with replication permissions
+mysql -u root -p<root_password> -e "
+CREATE USER 'replica_user'@'%' IDENTIFIED BY 'replica_password';
+GRANT REPLICATION SLAVE ON *.* TO 'replica_user'@'%';
+FLUSH PRIVILEGES;
+"
+
+# Grant SELECT privilege on mysql.user to holberton_user
+mysql -u root -p<root_password> -e "
+GRANT SELECT ON mysql.user TO 'holberton_user'@'localhost';
+FLUSH PRIVILEGES;
+"

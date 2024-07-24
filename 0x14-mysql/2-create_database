@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Create database and table
+mysql -u root -p<root_password> -e "
+CREATE DATABASE tyrell_corp;
+USE tyrell_corp;
+CREATE TABLE nexus6 (id INT PRIMARY KEY, name VARCHAR(255));
+INSERT INTO nexus6 (id, name) VALUES (1, 'Roy Batty');
+"
+
+# Grant SELECT permission to holberton_user
+mysql -u root -p<root_password> -e "
+GRANT SELECT ON tyrell_corp.nexus6 TO 'holberton_user'@'localhost';
+FLUSH PRIVILEGES;
+"
