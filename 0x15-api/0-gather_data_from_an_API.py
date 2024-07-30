@@ -1,23 +1,34 @@
 #!/usr/bin/python3
-"""using the JSONPlaceholder API:
-   returns information about the TODO list progress for a given employee ID"""
+"""Request employee ID from API
+"""
+
+from json import load
 import requests
-
-def get_todo_list_progress(employee_id):
-    url = f"(link unavailable)"
-    response = requests.get(url)
-    data = response.json()
-
-    employee_name = data["employee_name"]
-    total_tasks = len(data["todos"])
-    completed_tasks = [task for task in data["todos"] if task["completed"]]
-    num_done_tasks = len(completed_tasks)
-
-    print(f"Employee {employee_name} is done with tasks({num_done_tasks}/{total_tasks}):")
-
-    for task in completed_tasks:
-        print(f"\t{task['title']}")
+from sys import argv
 
 if __name__ == "__main__":
-    employee_id = int(input("Enter employee ID: "))
-    get_todo_list_progress(employee_id)
+
+    def make_request(resource, param=None):
+        """Retrieve user from API
+        """
+        url = 'https://jsonplaceholder.typicode.com/'
+        url += resource
+        if param:
+            url += ('?' + param[0] + '=' + param[1])
+
+        # make request
+        r = requests.get(url)
+
+        # extract json response
+        r = r.json()
+        return r
+
+    user = make_request('users', ('id', argv[1]))
+    tasks = make_request('todos', ('userId', argv[1]))
+    tasks_completed = [task for task in tasks if task['completed']]
+
+    print('Employee {} is done with tasks({}/{}):'.format(user[0]['name'],
+                                                          len(tasks_completed),
+                                                          len(tasks)))
+    for task in tasks_completed:
+        print('\t {}'.format(task['title']))
